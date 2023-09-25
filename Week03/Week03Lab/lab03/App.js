@@ -30,15 +30,17 @@ export default function App() {
           style={styles.image}
         />
       )}
-      <Button
-        title={
-          isImageVisible
-            ? "Click me to close me!"
-            : "Click me for a surprise :)"
-        }
-        color={"#de218b"}
-        onPress={triggerImage}
-      />
+      <View style={styles.buttonContainer}>
+        <Button
+          title={
+            isImageVisible
+              ? "Click me to close me!"
+              : "Click me for a surprise :)"
+          }
+          color={"#de218b"}
+          onPress={triggerImage}
+        />
+      </View>
     </View>
   );
 }
@@ -75,5 +77,9 @@ const styles = StyleSheet.create({
     width: 200,
     borderRadius: 50,
     marginBottom: 20,
+  },
+  buttonContainer: {
+    borderRadius: 150,
+    overflow: "hidden",
   },
 });
