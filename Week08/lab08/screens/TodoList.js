@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View, FlatList, Pressable } from "react-native";
+import { Text, View, FlatList, Pressable } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { FontAwesome } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
 import Checkbox from "expo-checkbox";
-import { SearchBar, withTheme } from "react-native-elements";
+import { SearchBar } from "react-native-elements";
+import { styles } from "./TodoList.style";
 
 export default function TodoList({ route, navigation }) {
   const TASKS_STORE_KEY = "@tasks";
@@ -16,14 +17,19 @@ export default function TodoList({ route, navigation }) {
   const [isChecked, setIsChecked] = useState([]);
   const [find, setFind] = useState("");
 
+  // The effect is handled during the loading of a page as
+  // per the [] dependacy list
   useEffect(() => {
     const loadTask = async () => {
       const storedTask = await AsyncStorage.getItem(TASKS_STORE_KEY);
 
+      // If there exists a task stored in AsyncStorage go ahead and pase the json
+      // and set the tasks
       if (storedTask !== null) {
         let tasks = JSON.parse(storedTask);
         setTasks(tasks);
 
+        // initially set all the check boxes as false
         setIsChecked(Array(tasks.length).fill(false));
       }
     };
@@ -31,6 +37,7 @@ export default function TodoList({ route, navigation }) {
   }, []);
 
   // Deals with saving a task when the tasks array has been modified
+  // to save the task
   useEffect(() => {
     const saveTask = async () => {
       await AsyncStorage.setItem(TASKS_STORE_KEY, JSON.stringify(tasks));
@@ -39,6 +46,9 @@ export default function TodoList({ route, navigation }) {
     saveTask();
   }, [tasks]);
 
+  // The following effect checks if a task has
+  // been updated. We get its index and set the task
+  // with the updated info!
   useEffect(() => {
     if (updatedTask && index) {
       const currentTasks = [...tasks];
@@ -47,6 +57,8 @@ export default function TodoList({ route, navigation }) {
     }
   }, [updatedTask, index]);
 
+  // The following effect will check if either details
+  // havew been modified and set it accordingly
   useEffect(() => {
     if (title && body && image && timestamp && serialisedDate) {
       setTasks((prevTask) => [
@@ -56,6 +68,11 @@ export default function TodoList({ route, navigation }) {
     }
   }, [title, body, image, serialisedDate]);
 
+  /**
+   * The following helper function helps remove a task given a particular
+   * index where it is located
+   * @param {*} idx - location of the task we want to remove
+   */
   const removeTask = (idx) => {
     const currentTasks = [...tasks];
     currentTasks.splice(idx, 1);
@@ -83,6 +100,9 @@ export default function TodoList({ route, navigation }) {
       />
 
       <FlatList
+        // data attribute here displays the task, else if
+        // we entered any search item in the search bar we filter
+        // the resulting todo titles based on that
         data={tasks.filter((item) =>
           item.title.toLowerCase().includes(find.toLowerCase())
         )}
@@ -144,71 +164,3 @@ export default function TodoList({ route, navigation }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-  },
-  createNoteButton: {
-    backgroundColor: "#150022",
-    width: 300,
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    alignSelf: "center",
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  createNoteButtonText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  buttonContainer: {
-    position: "absolute",
-    bottom: 5,
-    width: "100%",
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginTop: 50,
-    marginLeft: 16,
-  },
-  taskItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderColor: "#ccc",
-    marginLeft: 10,
-    marginRight: 10,
-  },
-  taskContent: {
-    flex: 1,
-  },
-  taskTitle: {
-    fontSize: 18,
-    // textDecorationLine: "underline",
-    fontWeight: "bold",
-    flexWrap: "wrap",
-    width: "90%",
-    marginLeft: 20,
-  },
-  removeButton: {
-    backgroundColor: "red",
-    width: 150,
-    padding: 8,
-    borderRadius: 4,
-    alignItems: "center",
-  },
-  removeButtonText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-  editButton: {
-    marginRight: 20,
-  },
-});

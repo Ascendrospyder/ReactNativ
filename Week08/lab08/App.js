@@ -1,5 +1,4 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import TodoList from "./screens/TodoList";
 import Create from "./screens/Create";
