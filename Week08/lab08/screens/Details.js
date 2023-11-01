@@ -2,18 +2,21 @@
 import { StyleSheet, Text, View, Image, ScrollView } from "react-native";
 
 export default function Details({ route, navigation }) {
-  const { title, body, timestamp, image } = route.params;
-  
+  const { title, body, timestamp, image, serialisedDate } = route.params;
+
+  let newDate = serialisedDate
+    ? new Date(serialisedDate).toLocaleDateString("en-GB")
+    : "(user has not specified)";
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.notesTitle}>{title}</Text>
         <Text style={styles.notesTimestamp}>Created at: {timestamp}</Text>
+        <Text style={styles.dueDate}>Due on {newDate}</Text>
       </View>
 
-      {image && (
-        <Image source={{ uri: image }} style={styles.image} />
-      )}
+      {image && <Image source={{ uri: image }} style={styles.image} />}
 
       <Text style={styles.bodyText}>{body}</Text>
     </ScrollView>
@@ -36,7 +39,7 @@ const styles = StyleSheet.create({
   },
   notesTimestamp: {
     color: "#888",
-    fontStyle: "italic"
+    fontStyle: "italic",
   },
   image: {
     height: 200,
@@ -45,5 +48,10 @@ const styles = StyleSheet.create({
   },
   bodyText: {
     fontSize: 18,
+  },
+  dueDate: {
+    color: "red",
+    fontWeight: "bold",
+    fontStyle: "italic",
   },
 });

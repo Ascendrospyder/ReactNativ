@@ -3,29 +3,28 @@ import { StyleSheet, Text, View, FlatList, Pressable } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { FontAwesome } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
+import Checkbox from "expo-checkbox";
+import { SearchBar, withTheme } from "react-native-elements";
 
 export default function TodoList({ route, navigation }) {
   const TASKS_STORE_KEY = "@tasks";
-  const [tasks, setTasks] = useState([]);
 
-  const { title, body, timestamp, image } = route.params ?? {};
-  console.log(
-    "Title: " +
-      title +
-      " body: " +
-      body +
-      " timestamp: " +
-      timestamp +
-      " image: " +
-      image
-  );
+  const { updatedTask, index } = route.params ?? {};
+  const { title, body, timestamp, image, serialisedDate } = route.params ?? {};
+
+  const [tasks, setTasks] = useState([]);
+  const [isChecked, setIsChecked] = useState([]);
+  const [find, setFind] = useState("");
 
   useEffect(() => {
     const loadTask = async () => {
       const storedTask = await AsyncStorage.getItem(TASKS_STORE_KEY);
 
       if (storedTask !== null) {
-        setTasks(JSON.parse(storedTask));
+        let tasks = JSON.parse(storedTask);
+        setTasks(tasks);
+
+        setIsChecked(Array(tasks.length).fill(false));
       }
     };
     loadTask();
@@ -41,10 +40,21 @@ export default function TodoList({ route, navigation }) {
   }, [tasks]);
 
   useEffect(() => {
-    if (title && body && image && timestamp) {
-      setTasks((prevTask) => [...prevTask, { title, body, timestamp, image }]);
+    if (updatedTask && index) {
+      const currentTasks = [...tasks];
+      currentTasks[index] = updatedTask;
+      setTasks(currentTasks);
     }
-  }, [title, body, image]);
+  }, [updatedTask, index]);
+
+  useEffect(() => {
+    if (title && body && image && timestamp && serialisedDate) {
+      setTasks((prevTask) => [
+        ...prevTask,
+        { title, body, timestamp, image, serialisedDate },
+      ]);
+    }
+  }, [title, body, image, serialisedDate]);
 
   const removeTask = (idx) => {
     const currentTasks = [...tasks];
@@ -56,11 +66,38 @@ export default function TodoList({ route, navigation }) {
     <View style={styles.container}>
       <Text style={styles.header}>My Tasks</Text>
 
+      <SearchBar
+        placeholder="Search a created task"
+        onChangeText={(query) => setFind(query)}
+        value={find}
+        inputStyle={{ color: "grey", backgroundColor: "white" }}
+        inputContainerStyle={{
+          backgroundColor: "white",
+          borderRadius: 25,
+        }}
+        containerStyle={{
+          backgroundColor: "#f5f5f5",
+          borderBottomColor: "transparent",
+          borderTopColor: "transparent",
+        }}
+      />
+
       <FlatList
-        data={tasks}
+        data={tasks.filter((item) =>
+          item.title.toLowerCase().includes(find.toLowerCase())
+        )}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item, index }) => (
           <View style={styles.taskItem}>
+            <Checkbox
+              value={isChecked[index]}
+              onValueChange={(newValue) => {
+                const newIsChecked = [...isChecked];
+                newIsChecked[index] = newValue;
+                setIsChecked(newIsChecked);
+              }}
+              color={"black"}
+            />
             <Pressable
               onPress={() =>
                 navigation.navigate("Details", {
@@ -68,6 +105,7 @@ export default function TodoList({ route, navigation }) {
                   body: item.body,
                   timestamp: item.timestamp,
                   image: item.image,
+                  serialisedDate: item.serialisedDate,
                 })
               }
               style={styles.taskContent}
@@ -76,7 +114,15 @@ export default function TodoList({ route, navigation }) {
             </Pressable>
             <Pressable
               style={styles.editButton}
-              onPress={() => editTask(index)}
+              onPress={() => {
+                navigation.navigate("Edit", {
+                  title: item.title,
+                  body: item.body,
+                  timestamp: item.timestamp,
+                  image: item.image,
+                  index: index,
+                });
+              }}
             >
               <FontAwesome name="edit" size={25} color="black" />
             </Pressable>
@@ -145,8 +191,11 @@ const styles = StyleSheet.create({
   },
   taskTitle: {
     fontSize: 18,
-    textDecorationLine: "underline",
+    // textDecorationLine: "underline",
     fontWeight: "bold",
+    flexWrap: "wrap",
+    width: "90%",
+    marginLeft: 20,
   },
   removeButton: {
     backgroundColor: "red",
